@@ -5,8 +5,6 @@ Date: April 25th, 2022
 A service class that provides utilities to parse commands received by the server.
 """
 
-from sys import path
-path.append("/home/luciferin/Documents/Fuck my life/Simplifile-Server/")    # Temporary, neccessary for python to recognize the api package.
 from simplifile_api import commands, exceptions
 
 class Parser:
@@ -33,7 +31,7 @@ class Parser:
             return exceptions.InvalidRequestError()
 
     @staticmethod
-    def parser(command: str):   # Used to parse from raw text into manageable bits.
+    def parser(command: str):               # Used to parse from raw text into manageable bits.
         if command[-1] != '\x04':
             return exceptions.InvalidRequestError()
         command_list = [ string.split(": ")[1] for string in command[:-1].split("\n") ]
