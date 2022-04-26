@@ -7,10 +7,10 @@ All commands will be stored here, and accessed through this module.
 
 # Imports
 from os import system
-from database import db_interface
+# from database import db_interface
 from dataclasses import dataclass
-from exceptions import UsernameInUse, MailInUse
-from server.transfer_port import *
+# from exceptions import UsernameInUse, MailInUse
+# from server.transfer_port import *
 
 
 @dataclass
