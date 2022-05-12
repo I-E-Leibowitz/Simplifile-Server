@@ -36,7 +36,8 @@ test_fun() {
 error_code=0
 if [[ $1 -eq 0 ]]       # Checks if positional argument 1 is used, defaults if not.
 then
-    root_path="~/simplifile/"
+    user = whoami
+    root_path="/home/$user/simplifile/"
 else
     root_path=$1
 fi
@@ -56,9 +57,16 @@ verify_requirements "sqlite3"
 if [[ reqs_met -eq 1 ]]
 then
     echo "Working..."
-    # Add API to path
-    # Create root folder
-    # Create database
+    mkdir root_path
+    mv ./ $root_path
+    cd $root_path
+    echo "Created server root..."
+    echo "export PATH=$PATH:\"$root_path/simplifile_api\"" > /home/$user/.bashrc
+    echo "Added API to PATH variable..."
+    # TODO: Create database
+    # TODO: Add server files to server root
+    source "~/.bashrc"
+
 else
     echo "Exiting with error code $error_code"
 fi

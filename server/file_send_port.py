@@ -20,8 +20,13 @@ class FileSendHandler(BaseRequestHandler):
         return _handler_creator
 
     def handle(self):
-        data = b''
-        with open(f'./{self.client_name}/{self.file_name}', 'rb') as file:
-            data = file.read(self.file_size)
-            self.request.sendall(data)
+        with open(self.file_name, 'br') as file:
+            data = b''
+            while data != '':
+                data = file.read(self.file_size)
+                self.request.sendall(data)
+                print(data)
+            self.request.sendall(bytes(f"{commands.Success()}", 'ascii'))
+            print("Done")
+            print("# ")
         

@@ -28,8 +28,10 @@ class RequestHandler(BaseRequestHandler):
         if command is commands._Command:
             command.execute()
             self.request.send("Operation Successful.")
+            print("# ")
         else:
             self.request.send(bytes(f'{command}', 'ascii'))
+            print("# ")
 
 
 if __name__ == '__main__':

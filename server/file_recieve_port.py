@@ -23,8 +23,20 @@ class FileRecieveHandler(BaseRequestHandler):
         return _handler_creator
     
     def handle(self):
-        data = b''
-        with open(f"./{self.client_name}/{self.file_name}", 'wb') as file:
-            data = self.request.recv(file_size)
-            file.write(data)
-        self.request.send(f"{commands.Success()}".encode('ascii'))
+        timer = time.time()
+        try:
+            with open(self.file_name, 'bw') as file:
+                data = b''
+                while True:
+                    data = self.request.recv(self.file_size)       # TODO: Change this to a dynamic receiving to not get stuck.
+                    print(data)
+                    if not data: break
+                    file.write(data)
+                self.request.send(bytes(f"{commands.Success()}", 'ascii'))
+                print(time.time() - timer)
+                print("Done.")
+                print("# ")
+        except Exception as e:
+            print(e)
+            system(f"rm -r {self.file_path}")
+            print("# ")
