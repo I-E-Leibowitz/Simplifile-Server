@@ -6,11 +6,14 @@ All commands will be stored here, and accessed through this module.
 """
 
 # Imports
+from socketserver import TCPServer
 from os import system
-# from database import db_interface
+from database import interface
 from dataclasses import dataclass
-# from exceptions import UsernameInUse, MailInUse
-# from server.transfer_port import *
+from simplifile_api.exceptions import UsernameInUse, MailInUse
+from file_transfer.file_recieve_port import FileRecieveHandler
+from file_transfer.file_send_port import FileSendHandler
+from socket import socket, AF_INET, SOCK_STREAM
 
 
 @dataclass
@@ -20,7 +23,7 @@ class _Command:
     """
     id: int
     command: str = None
-    args: str = None
+    args: list = None
 
     def validate(self, ext_command: tuple) -> bool:
         """
@@ -53,15 +56,20 @@ class Upload(_Command):
         """
         Passes the command to the server for handling. Currently WIP.
 
-        args: (0) location on server (1) size of file (2) user to which the file belongs
+        args: (0) size of file (1) user to which the file belongs (2) file name
         """
+        filename = self.args[2].split('/')[-1]
+        with TCPServer(("0.0.0.0", 55446), FileRecieveHandler.Creator(int(self.args[0]), f"../server/{self.args[1]}/{filename}")) as server:
+            server.handle_request()
+            interface.add_file(self.args[1], self.args[2], self.args[0], self.args[3])
+
         
             
     def validate_arguments(self):
         """
         Validates the arguents, ensuring they are valid for the specific function. Is empty here.
         """ 
-        return super().validate_arguments(3)
+        return super().validate_arguments(4)
 # ---
 
 @dataclass
@@ -72,17 +80,27 @@ class Download(_Command):
         """
         return super().validate((1, "download"))
     
-    def execute(self, data):
+    def execute(self):
         """
         Passes the command to the server for handling. Currently WIP.
         """
-        return super().execute()
+        filename = self.args[1].split('/')[-1]
+        with socket(AF_INET, SOCK_STREAM) as sock:
+            sock.connect(("10.100.102.8", 55446))
+            with open(f"{self.args[0]}/{filename}", 'br') as file:
+                data = b'/'
+                while data != b'':
+                    data = file.read(1)
+                    sock.send(data)
+                    print(data)
+                # sock.sendall(bytes(f"{commands.Success()}", 'ascii'))
+                print("Done")
     
     def validate_arguments(self):
         """
         Validates the arguents, ensuring they are valid for the specific function. Is empty here.
         """
-        return super().validate_arguments(3)
+        return super().validate_arguments(2)
 # ---
 
 @dataclass
@@ -91,31 +109,25 @@ class CreateUser(_Command):
         """
         Returns true if the id and the command match the valid ones for the CreateUser command.
         """
-        return super().validate((2, "ucreate"))
+        return super().validate((2, "addusr"))
 
     def execute(self):
         """
         Passes the command to the server for handling. Currently WIP
-        All neccessary details (email: str, username: str, password: str)
+        All neccessary details (username: str, email: str, password: str)
         are passed through the self.args field, in a yet to be determined order.
         """
-        user = db_interface.findUsers(self.args[0], 'username')
-        mail = db_interface.findUsers(self.args[0], 'email')
+        user = interface.get_user(self.args[0], self.args[1])
         print(user)
-        print(mail)
-        userExist = user == self.args[1]
-        mailExist = mail == self.args[0]
-        print(mailExist)
-        print(userExist)
-        if not userExist:
-            return UsernameInUse
-        elif not mailExist:
-            return MailInUse
-        else:
-            db_interface.addUser(self.args[0], self.args[1], self.args[2])
-            print("a")
-            system(f"mkdir ./{self.args[0]}")   # INCREDIBLY INSECURE. Implement input checks.
-            return Success
+        # if not userExist:
+        #     return UsernameInUse
+        # elif not mailExist:
+        #     return MailInUse
+        # else:
+        interface.add_user(self.args[0], self.args[1], self.args[2])
+        print("a")
+        system(f"mkdir ./{self.args[0]}")   # INCREDIBLY INSECURE. Implement input checks.
+        return Success
 
     def validate_arguments(self):
         """
@@ -138,9 +150,9 @@ class DeleteUser(_Command):
         All neccessary details (email:str, username: str, password: str)
         are passed through the self.args field
         """
-        password = db_interface.findUsers(self.args[0], 'password')
+        password = interface.findUsers(self.args[0], 'password')
         if password == self.args[2]:
-            db_interface.delUser(self.args[0], self.args[1])
+            interface.delUser(self.args[0], self.args[1])
             system(f"rm -r ./{self.args[1]}")   # INCREDIBLY INSECURE. Implement input checks.
             return Success
         else:
@@ -165,8 +177,8 @@ class ChangePassword(_Command):
         """
         Passes the command to the server for handling. Currently WIP
         """
-        if db_interface.findUsers(f'{self.args[0]}', 'password') == self.args[2]:
-            db_interface.changeUsers(f'{self.args[0]}', 'password', value)
+        if interface.findUsers(f'{self.args[0]}', 'password') == self.args[2]:
+            interface.changeUsers(f'{self.args[0]}', 'password', value)
             return Success
         return Abort
 
@@ -177,6 +189,19 @@ class ChangePassword(_Command):
         return super().validate_arguments(3)
 # ---
 
+@dataclass
+class ValidateUser(_Command):
+    def validate(self) -> bool:
+        return super().validate((5, "uvalidate"))
+    
+    def execute(self):
+        if interface.find_user(args[0]):
+            return True
+        else: return False
+    
+    def validate_arguments(self):
+        return super().validate_arguments(2)
+# ---
 @dataclass
 class Abort(_Command):
     """

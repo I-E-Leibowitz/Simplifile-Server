@@ -8,10 +8,8 @@ Send files to client
 from socketserver import BaseRequestHandler
 
 class FileSendHandler(BaseRequestHandler):
-    def __init__(self, request, client_address, server, file_name, file_size, client_name):
+    def __init__(self, request, client_address, server, file_name):
         self.file_name = file_name
-        self.file_size = file_size
-        self.client_name = client_name
     
     @classmethod
     def creator(cls, *args, **kwargs):
@@ -24,9 +22,8 @@ class FileSendHandler(BaseRequestHandler):
             data = b''
             while data != '':
                 data = file.read(self.file_size)
-                self.request.sendall(data)
+                self.request.send(data)
                 print(data)
             self.request.sendall(bytes(f"{commands.Success()}", 'ascii'))
             print("Done")
-            print("# ")
         

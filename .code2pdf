@@ -1,0 +1,7 @@
+:directories:
+    - .git
+:files:
+    - .gitignore
+    - make.bat
+    - test.py
+    - .code2pdf

@@ -64,6 +64,7 @@ then
     echo "export PATH=$PATH:\"$root_path/simplifile_api\"" > /home/$user/.bashrc
     echo "Added API to PATH variable..."
     # TODO: Create database
+    exec 
     # TODO: Add server files to server root
     source "~/.bashrc"
 
